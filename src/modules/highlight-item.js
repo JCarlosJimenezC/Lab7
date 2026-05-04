@@ -15,7 +15,21 @@ class HighlightItem extends HTMLElement {
   }
 
   connectedCallback() {
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     this._render();
+    // Listener único — lee los atributos en el momento del click.
+    this.shadowRoot.addEventListener('click', () => {
+      const videoId = this.getAttribute('video-id') || '';
+      const seconds = parseInt(this.getAttribute('seconds') || '0', 10);
+      const evName  = (window.DEVPATH && window.DEVPATH.CONSTANTS)
+        ? window.DEVPATH.CONSTANTS.EVENTS.HIGHLIGHT_CLICK
+        : 'highlight-click';
+      this.dispatchEvent(new CustomEvent(evName, {
+        bubbles: true,
+        composed: true,
+        detail: { videoId, seconds },
+      }));
+    });
   }
 
   attributeChangedCallback() {
@@ -24,7 +38,6 @@ class HighlightItem extends HTMLElement {
 
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
-
     const time    = this.getAttribute('time') || '0:00';
     const title   = this.getAttribute('title') || '';
     const desc    = this.getAttribute('desc') || '';
@@ -33,20 +46,9 @@ class HighlightItem extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host { display: block; }
         :host {
-          --bg-elevated: #1a1a26;
-          --bg-overlay:  #22223a;
-          --border:      #2a2a42;
-          --accent:      #6366f1;
-          --accent-light:#818cf8;
-          --accent-dim:  #312e81;
-          --text-primary: #e2e2f0;
-          --text-secondary: #9090b0;
-          --radius-sm: 2px;
-          --transition: 180ms ease;
-          --font: 'Segoe UI', system-ui, sans-serif;
-          --mono: 'Cascadia Code', 'Fira Code', monospace;
+          display: block;
+          /* Las variables de color se heredan de :root */
         }
 
         .highlight-item {
@@ -119,13 +121,7 @@ class HighlightItem extends HTMLElement {
       </div>
     `;
 
-    this.shadowRoot.querySelector('.highlight-item').addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('highlight-click', {
-        bubbles: true,
-        composed: true,
-        detail: { videoId, seconds: parseInt(seconds) }
-      }));
-    });
+    // El click se maneja en connectedCallback (listener único).
   }
 }
 

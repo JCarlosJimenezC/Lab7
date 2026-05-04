@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,12 +12,16 @@
   <aside id="sidebar">
     <div id="sidebar-header">
       <span class="logo">⬡ DevPath</span>
-      <button id="sidebar-toggle" title="Colapsar menú">‹</button>
+      <div class="sidebar-header-actions">
+        <button id="theme-toggle" title="Cambiar tema">🌙</button>
+        <button id="sidebar-toggle" title="Colapsar menú">‹</button>
+      </div>
     </div>
 
     <div id="course-meta">
       <div id="course-title">Multimedios</div>
       <div id="course-subtitle">IF-7102 · I Ciclo 2026</div>
+      <button id="home-btn" title="Información del curso">⌂ Información del curso</button>
     </div>
 
     <!-- Web Component: skill grid -->
@@ -26,32 +30,19 @@
 
   <!-- MAIN CONTENT -->
   <main id="main-content">
+    <!-- Panel por defecto: información del curso -->
+    <course-info id="course-info"></course-info>
+
     <!-- Web Component: contenido del tema seleccionado -->
     <topic-content id="topic-content"></topic-content>
-
-    <!-- Pantalla de bienvenida cuando no hay tema seleccionado -->
-    <div id="welcome-screen">
-      <div class="welcome-inner">
-        <div class="welcome-icon">⬡</div>
-        <h1 id="welcome-title">Multimedios</h1>
-        <p id="welcome-desc">Selecciona un tema del árbol de habilidades para comenzar.</p>
-        <div class="course-info-card">
-          <div class="ci-row"><span class="ci-label">Código</span><span id="ci-code" class="ci-value">—</span></div>
-          <div class="ci-row"><span class="ci-label">Profesor</span><span id="ci-prof" class="ci-value">—</span></div>
-          <div class="ci-row"><span class="ci-label">Correo</span><a id="ci-email" class="ci-value ci-link" href="#">—</a></div>
-          <div class="ci-row"><span class="ci-label">Atención</span><span id="ci-hours" class="ci-value">—</span></div>
-          <div class="ci-row"><span class="ci-label">Modalidad</span><span id="ci-modality" class="ci-value">—</span></div>
-        </div>
-        <div class="welcome-stats">
-          <div class="stat"><span id="stat-topics">0</span><small>Temas</small></div>
-          <div class="stat"><span id="stat-phases">0</span><small>Fases</small></div>
-          <div class="stat"><span id="stat-highlights">0</span><small>Highlights</small></div>
-        </div>
-      </div>
-    </div>
   </main>
 
+  <!-- CONSTANTES Y TEMA (deben cargarse primero) -->
+  <script src="modules/constants.js"></script>
+  <script src="modules/theme-manager.js"></script>
+
   <!-- WEB COMPONENTS -->
+  <script src="modules/course-info.js"></script>
   <script src="modules/skill-node.js"></script>
   <script src="modules/skill-grid.js"></script>
   <script src="modules/topic-content.js"></script>

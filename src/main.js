@@ -1,35 +1,44 @@
 /**
- * app.js — Lógica principal de la aplicación
+ * main.js — Lógica principal de la aplicación DevPath.
  * Conecta los datos con los web components y gestiona la navegación.
  */
 
 (function () {
   'use strict';
 
-  // ── Referencias al DOM ────────────────────────────────────────────
+  // ── Constantes y helpers de animación ────────────────────────
+  const { ANIM, EVENTS, THEME } = window.DEVPATH.CONSTANTS;
+  const ThemeManager = window.DEVPATH.ThemeManager;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // ── Inicializar tema (antes de pintar nada) ───────────────────
+  ThemeManager.init();
+
+  // ── Referencias al DOM ────────────────────────────────────────
   const skillGrid    = document.getElementById('skill-grid');
   const topicContent = document.getElementById('topic-content');
-  const welcomeScreen = document.getElementById('welcome-screen');
+  const courseInfoEl = document.getElementById('course-info');
   const sidebar      = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebar-toggle');
+  const themeToggle  = document.getElementById('theme-toggle');
+  const homeBtn      = document.getElementById('home-btn');
 
-  // Stats de la pantalla de bienvenida
-  const statTopics     = document.getElementById('stat-topics');
-  const statPhases     = document.getElementById('stat-phases');
-  const statHighlights = document.getElementById('stat-highlights');
-
-  // ── Botón para mostrar sidebar cuando está colapsado ─────────────
+  // ── Botón flotante para mostrar sidebar cuando está colapsado ─
   const showBtn = document.createElement('button');
   showBtn.id = 'show-sidebar-btn';
   showBtn.title = 'Mostrar menú';
   showBtn.innerHTML = '›';
   document.body.appendChild(showBtn);
 
-  // ── Estado ────────────────────────────────────────────────────────
+  // ── Estado ────────────────────────────────────────────────────
   let currentTopicId = null;
   const courseData = window.COURSE_DATA;
 
-  // ── Inicialización ────────────────────────────────────────────────
+  // ── Inicialización ────────────────────────────────────────────
   function init() {
     if (!courseData) {
       console.error('No se encontraron datos del curso (COURSE_DATA).');
@@ -39,60 +48,40 @@
     // Cargar el grid de habilidades
     skillGrid.loadCourse(courseData);
 
-    // Calcular y mostrar estadísticas en la pantalla de bienvenida
-    let totalTopics = 0;
-    let totalHighlights = 0;
-    courseData.phases.forEach(phase => {
-      phase.topics.forEach(topic => {
-        totalTopics++;
-        totalHighlights += topic.highlights ? topic.highlights.length : 0;
-      });
-    });
+    // Cargar datos en el panel course-info
+    courseInfoEl.setCourse(courseData);
 
-    animateCount(statTopics, totalTopics);
-    animateCount(statPhases, courseData.phases.length);
-    animateCount(statHighlights, totalHighlights);
-
-    // Título del curso en el sidebar
-    document.getElementById('course-title').textContent = courseData.name;
+    // Datos del sidebar
+    document.getElementById('course-title').textContent  = courseData.name;
     document.getElementById('course-subtitle').textContent = courseData.subtitle || '';
 
-    // Pantalla de bienvenida — info del curso
-    const welcomeTitle = document.getElementById('welcome-title');
-    if (welcomeTitle) welcomeTitle.textContent = courseData.name;
-    const welcomeDesc = document.getElementById('welcome-desc');
-    if (welcomeDesc && courseData.description) welcomeDesc.textContent = courseData.description;
-    _setText('ci-code',     courseData.code       || '—');
-    _setText('ci-prof',     courseData.professor  || '—');
-    _setText('ci-hours',    courseData.officeHours || '—');
-    _setText('ci-modality', courseData.modality   || '—');
-    const emailEl = document.getElementById('ci-email');
-    if (emailEl && courseData.email) {
-      emailEl.textContent = courseData.email;
-      emailEl.href = `mailto:${courseData.email}`;
-    }
-
-    // Título de la pestaña/tab del navegador
+    // Título de la pestaña del navegador
     document.title = `${courseData.name} — ${courseData.subtitle || 'Plataforma de Cursos'}`;
+
+    // Estado inicial del botón de tema
+    _updateThemeIcon();
   }
 
-  function _setText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
+  // ── Actualizar ícono del botón de tema ────────────────────────
+  function _updateThemeIcon() {
+    if (!themeToggle) return;
+    themeToggle.textContent = ThemeManager.getCurrent() === THEME.DARK ? '🌙' : '☀️';
+    themeToggle.title = ThemeManager.getCurrent() === THEME.DARK
+      ? 'Cambiar a modo claro'
+      : 'Cambiar a modo oscuro';
   }
 
-  // ── Animación de contadores en bienvenida ─────────────────────────
-  function animateCount(el, target) {
-    let current = 0;
-    const step = Math.ceil(target / 30);
-    const timer = setInterval(() => {
-      current = Math.min(current + step, target);
-      el.textContent = current;
-      if (current >= target) clearInterval(timer);
-    }, 30);
+  // ── Mostrar panel de información del curso ────────────────────
+  function showCourseInfo() {
+    topicContent.classList.remove('visible');
+    courseInfoEl.classList.remove('hidden');
+    homeBtn.classList.add('active');
+    skillGrid.selectTopic(null);
+    currentTopicId = null;
+    history.replaceState(null, '', window.location.pathname);
   }
 
-  // ── Encontrar datos del tema por ID ──────────────────────────────
+  // ── Encontrar datos del tema por ID ──────────────────────────
   function findTopicById(id) {
     for (const phase of courseData.phases) {
       for (const topic of phase.topics) {
@@ -102,36 +91,56 @@
     return null;
   }
 
-  // ── Mostrar tema ──────────────────────────────────────────────────
-  function selectTopic(topicId) {
+  // ── Mostrar tema con transición ───────────────────────────────
+  async function selectTopic(topicId) {
     if (currentTopicId === topicId) return;
-    currentTopicId = topicId;
 
     const result = findTopicById(topicId);
     if (!result) return;
 
+    const wasVisible = topicContent.classList.contains('visible');
+
+    // Fade-out antes de cambiar contenido
+    if (!prefersReduced && wasVisible) {
+      topicContent.classList.add('is-exiting');
+      await _sleep(ANIM.FADE_OUT_MS);
+      topicContent.classList.remove('is-exiting');
+    }
+
+    currentTopicId = topicId;
     const { topic, phase } = result;
 
-    // Mostrar el componente de contenido y ocultar la bienvenida
+    // Mostrar topic-content y ocultar course-info
+    courseInfoEl.classList.add('hidden');
     topicContent.classList.add('visible');
-    welcomeScreen.classList.add('hidden');
+    homeBtn.classList.remove('active');
 
-    // Cargar el tema en el web component
+    // Cargar el tema (activa las animaciones CSS del shadow DOM)
     topicContent.loadTopic(topic, phase);
 
-    // Actualizar el grid (selección visual)
+    // Actualizar selección en el grid
     skillGrid.selectTopic(topicId);
 
     // Actualizar URL hash para bookmarking
     history.replaceState(null, '', `#${topicId}`);
   }
 
-  // ── Escuchar eventos de selección del skill grid ──────────────────
-  document.addEventListener('topic-selected', (e) => {
+  // ── Escuchar eventos de selección del skill grid ──────────────
+  document.addEventListener(EVENTS.TOPIC_SELECTED, (e) => {
     selectTopic(e.detail.topicId);
   });
 
-  // ── Sidebar toggle ────────────────────────────────────────────────
+  // ── Botón de información del curso ────────────────────────────
+  homeBtn.addEventListener('click', showCourseInfo);
+  document.addEventListener(EVENTS.SHOW_COURSE_INFO, showCourseInfo);
+
+  // ── Toggle de tema ────────────────────────────────────────────
+  themeToggle.addEventListener('click', () => {
+    ThemeManager.toggle();
+    _updateThemeIcon();
+  });
+
+  // ── Sidebar toggle ────────────────────────────────────────────
   sidebarToggle.addEventListener('click', () => {
     sidebar.classList.add('collapsed');
     showBtn.classList.add('visible');
@@ -142,11 +151,10 @@
     showBtn.classList.remove('visible');
   });
 
-  // ── Restaurar estado desde URL hash ──────────────────────────────
+  // ── Restaurar estado desde URL hash ──────────────────────────
   function restoreFromHash() {
     const hash = window.location.hash.slice(1);
     if (hash) {
-      // Esperar a que los web components estén listos
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           selectTopic(hash);
@@ -160,7 +168,7 @@
     if (hash) selectTopic(hash);
   });
 
-  // ── Keyboard navigation ───────────────────────────────────────────
+  // ── Keyboard navigation ───────────────────────────────────────
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && sidebar.classList.contains('collapsed')) {
       sidebar.classList.remove('collapsed');
@@ -168,7 +176,7 @@
     }
   });
 
-  // ── Boot ──────────────────────────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────────
   init();
   restoreFromHash();
 

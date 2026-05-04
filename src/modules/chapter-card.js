@@ -17,7 +17,20 @@ class ChapterCard extends HTMLElement {
   }
 
   connectedCallback() {
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     this._render();
+    // Listener único — lee el atributo video-id en el momento del click.
+    this.shadowRoot.addEventListener('click', () => {
+      const videoId = this.getAttribute('video-id') || '';
+      const evName  = (window.DEVPATH && window.DEVPATH.CONSTANTS)
+        ? window.DEVPATH.CONSTANTS.EVENTS.CHAPTER_CLICK
+        : 'chapter-click';
+      this.dispatchEvent(new CustomEvent(evName, {
+        bubbles: true,
+        composed: true,
+        detail: { videoId },
+      }));
+    });
   }
 
   attributeChangedCallback() {
@@ -39,21 +52,9 @@ class ChapterCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host { display: block; }
         :host {
-          --bg-elevated:  #1a1a26;
-          --bg-overlay:   #22223a;
-          --border:       #2a2a42;
-          --accent2:      #ec4899;
-          --accent2-light:#f472b6;
-          --accent2-dim:  #831843;
-          --accent-light: #818cf8;
-          --text-primary: #e2e2f0;
-          --text-secondary:#9090b0;
-          --radius:       4px;
-          --transition:   180ms ease;
-          --font: 'Segoe UI', system-ui, sans-serif;
-          --mono: 'Cascadia Code', 'Fira Code', monospace;
+          display: block;
+          /* Las variables de color se heredan de :root */
         }
 
         .chapter-card {
@@ -166,13 +167,7 @@ class ChapterCard extends HTMLElement {
       </div>
     `;
 
-    this.shadowRoot.querySelector('.chapter-card').addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('chapter-click', {
-        bubbles: true,
-        composed: true,
-        detail: { videoId }
-      }));
-    });
+    // El click se maneja en connectedCallback (listener único).
   }
 }
 
