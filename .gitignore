@@ -1,0 +1,24 @@
+# Dependencias
+node_modules/
+
+# Lock files (mantén el tuyo, ignora los de otros gestores)
+package-lock.json
+yarn.lock
+
+# Builds / dist
+dist/
+build/
+
+# Editor
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
