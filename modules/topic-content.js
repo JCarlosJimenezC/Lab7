@@ -18,6 +18,33 @@ class TopicContent extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
     this._render();
+
+    // ── Tab click (delegado) ─────────────────────────────────────
+    this.shadowRoot.addEventListener('click', (e) => {
+      const tabBtn = e.target.closest('.tab-btn');
+      if (!tabBtn) return;
+      this._activeTab = tabBtn.dataset.tab;
+      this.shadowRoot.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      this.shadowRoot.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tabBtn.classList.add('active');
+      this.shadowRoot.getElementById(`panel-${tabBtn.dataset.tab}`)?.classList.add('active');
+    });
+
+    // ── Highlight click → buscar posición en el video ─────────
+    this.shadowRoot.addEventListener('highlight-click', (e) => {
+      const { videoId: vid, seconds } = e.detail;
+      if (!vid) return;
+      const iframe = this.shadowRoot.querySelector('iframe');
+      if (iframe) {
+        iframe.src = `https://www.youtube.com/embed/${vid}?start=${seconds}&autoplay=1&rel=0&modestbranding=1`;
+      }
+    });
+
+    // ── Chapter click → abrir en nueva pestaña ────────────────
+    this.shadowRoot.addEventListener('chapter-click', (e) => {
+      const { videoId: vid } = e.detail;
+      if (vid) window.open(`https://www.youtube.com/watch?v=${vid}`, '_blank', 'noopener');
+    });
   }
 
   loadTopic(topic, phase) {
@@ -99,31 +126,30 @@ class TopicContent extends HTMLElement {
           overflow-y: auto;
           height: 100%;
           scrollbar-width: thin;
-          scrollbar-color: #3d3d60 transparent;
+          scrollbar-color: var(--border-bright) transparent;
+          /* Las variables de color se heredan de :root */
         }
-        :host {
-          --bg-base:        #0a0a0f;
-          --bg-surface:     #111118;
-          --bg-elevated:    #1a1a26;
-          --bg-overlay:     #22223a;
-          --border:         #2a2a42;
-          --border-bright:  #3d3d60;
-          --accent:         #6366f1;
-          --accent-light:   #818cf8;
-          --accent-dim:     #312e81;
-          --accent2:        #ec4899;
-          --accent2-light:  #f472b6;
-          --accent2-dim:    #831843;
-          --text-primary:   #e2e2f0;
-          --text-secondary: #9090b0;
-          --radius-sm: 2px;
-          --radius:    4px;
-          --transition: 180ms ease;
-          --font: 'Segoe UI', system-ui, sans-serif;
-          --mono: 'Cascadia Code', 'Fira Code', monospace;
-        }
+        :host::-webkit-scrollbar       { width: 6px; }
+        :host::-webkit-scrollbar-track { background: transparent; }
+        :host::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── ANIMACIONES ──────────────────────────────────────── */
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .topic-header    { animation: fadeSlideIn 300ms cubic-bezier(0.4,0,0.2,1) 0ms   both; }
+        .video-main-block { animation: fadeSlideIn 300ms cubic-bezier(0.4,0,0.2,1) 60ms  both; }
+        .content-tabs    { animation: fadeSlideIn 300ms cubic-bezier(0.4,0,0.2,1) 120ms both; }
+        .tab-panel.active { animation: fadeSlideIn 300ms cubic-bezier(0.4,0,0.2,1) 180ms both; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .topic-header, .video-main-block, .content-tabs, .tab-panel { animation: none; }
+        }
+        /* ────────────────────────────────────────────────────── */
 
         .topic-wrapper {
           padding: 32px 40px 60px;
@@ -405,32 +431,7 @@ class TopicContent extends HTMLElement {
       </div>
     `;
 
-    // Tab switching
-    this.shadowRoot.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this._activeTab = btn.dataset.tab;
-        this.shadowRoot.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        this.shadowRoot.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        this.shadowRoot.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
-      });
-    });
-
-    // Highlight click → seek video
-    this.shadowRoot.addEventListener('highlight-click', (e) => {
-      const { videoId: vid, seconds } = e.detail;
-      if (!vid) return;
-      const iframe = this.shadowRoot.querySelector('iframe');
-      if (iframe) {
-        iframe.src = `https://www.youtube.com/embed/${vid}?start=${seconds}&autoplay=1&rel=0&modestbranding=1`;
-      }
-    });
-
-    // Chapter click → open video
-    this.shadowRoot.addEventListener('chapter-click', (e) => {
-      const { videoId: vid } = e.detail;
-      if (vid) window.open(`https://www.youtube.com/watch?v=${vid}`, '_blank');
-    });
+    // Todos los event listeners están en connectedCallback (listeners únicos).
   }
 }
 

@@ -18,8 +18,10 @@ class SkillGrid extends HTMLElement {
     this._render();
     this.shadowRoot.addEventListener('node-select', (e) => {
       this.selectTopic(e.detail.topicId);
-      // Re-bubble al documento
-      this.dispatchEvent(new CustomEvent('topic-selected', {
+      const evName = (window.DEVPATH && window.DEVPATH.CONSTANTS)
+        ? window.DEVPATH.CONSTANTS.EVENTS.TOPIC_SELECTED
+        : 'topic-selected';
+      this.dispatchEvent(new CustomEvent(evName, {
         bubbles: true,
         composed: true,
         detail: { topicId: e.detail.topicId }
@@ -54,29 +56,7 @@ class SkillGrid extends HTMLElement {
         :host {
           display: block;
           color: var(--text-primary, #e2e2f0);
-        }
-
-        /* Variables duplicadas para el shadow DOM */
-        :host {
-          --bg-base:       #0a0a0f;
-          --bg-surface:    #111118;
-          --bg-elevated:   #1a1a26;
-          --bg-overlay:    #22223a;
-          --border:        #2a2a42;
-          --border-bright: #3d3d60;
-          --accent:        #6366f1;
-          --accent-light:  #818cf8;
-          --accent-dim:    #312e81;
-          --accent2:       #ec4899;
-          --accent2-light: #f472b6;
-          --accent2-dim:   #831843;
-          --text-primary:  #e2e2f0;
-          --text-secondary:#9090b0;
-          --radius-sm: 2px;
-          --radius: 4px;
-          --transition: 180ms ease;
-          --font: 'Segoe UI', system-ui, sans-serif;
-          --mono: 'Cascadia Code', 'Fira Code', monospace;
+          /* Las variables de color se heredan de :root */
         }
 
         .phase-block { margin-bottom: 4px; }

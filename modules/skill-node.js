@@ -15,7 +15,20 @@ class SkillNode extends HTMLElement {
   }
 
   connectedCallback() {
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     this._render();
+    // Listener único — lee el atributo topic-id en el momento del click.
+    this.shadowRoot.addEventListener('click', () => {
+      const topicId = this.getAttribute('topic-id');
+      if (topicId) {
+        this.dispatchEvent(new CustomEvent(
+          (window.DEVPATH && window.DEVPATH.CONSTANTS)
+            ? window.DEVPATH.CONSTANTS.EVENTS.NODE_SELECT
+            : 'node-select',
+          { bubbles: true, composed: true, detail: { topicId } }
+        ));
+      }
+    });
   }
 
   attributeChangedCallback() {
@@ -33,23 +46,9 @@ class SkillNode extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host { display: block; }
         :host {
-          --bg-elevated:  #1a1a26;
-          --bg-overlay:   #22223a;
-          --border:       #2a2a42;
-          --accent:       #6366f1;
-          --accent-light: #818cf8;
-          --accent-dim:   #312e81;
-          --accent2:      #ec4899;
-          --accent2-light:#f472b6;
-          --accent2-dim:  #831843;
-          --text-primary: #e2e2f0;
-          --text-secondary:#9090b0;
-          --radius-sm: 2px;
-          --transition: 180ms ease;
-          --font: 'Segoe UI', system-ui, sans-serif;
-          --mono: 'Cascadia Code', 'Fira Code', monospace;
+          display: block;
+          /* Las variables de color se heredan de :root — no se sobreescriben aquí */
         }
 
         .skill-node {
@@ -157,14 +156,7 @@ class SkillNode extends HTMLElement {
       </div>
     `;
 
-    // Re-attach click after re-render
-    this.shadowRoot.querySelector('.skill-node').addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('node-select', {
-        bubbles: true,
-        composed: true,
-        detail: { topicId: this.getAttribute('topic-id') }
-      }));
-    });
+    // El click se maneja en connectedCallback (listener único).
   }
 }
 

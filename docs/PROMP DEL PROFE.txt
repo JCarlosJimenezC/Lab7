@@ -1,0 +1,18 @@
+PROMP DEL PROFE: 
+
+Crea una web que va a ser una plataforma de cursos donde voy a añadir videos de youtube que formen parte de un temario. Quiero que a la izquierda aparezca un grid (simulando un árbol de habilidades como el de los videojuegos), pero respecto a los temas del curso y sus secciones (terminal, git, html, css, javascript, etc...).
+
+Quiero que las habilidades salgan como cuadraditos o cubos, apilados encima, debajo, o a los lados (Similar al selector de jugadores del street fighter, debe recordar a ese selector grid) y al seleccionarlo, se vea en grande su información a la derecha. Esta parte los cuadraditos rectos, con esquinas afiladas, como cubos, compactos y que no sean muy grandes. Es importante que esta parte esté hecha con webcomponents para que sea facil de reutilizar.
+
+Toda esta parte estará en un menú lateral del lado izquierdo de la página. La página principal estará a la derecha, donde aparecerá el contenido seleccionado.
+
+Ten en cuenta que el contenido es así:
+
+Curso: Nombre del curso, que incluye varias fases.
+Fase: Sección virtual para agrupar varios temas.
+Tema: Cada uno de los temas de una fase. Cada tema es un cuadradito de los que mencionamos. Al pulsar en el tema, mostramos a la derecha todo el contenido de ese tema.
+Cada tema tiene: un video del tema completo, generalmente de varias horas (4-5). Ese tema tiene highlights a minutos especificos. Opcionalmente puede tener capitulos.
+Capitulos: Videos editados y resumidos del tema que puede agrupar un conjunto de highlights.
+Busca una forma de mostrarlo todo, que sea natural y recordando que todos los temas tienen highlights, pero puede que no tengan capitulos, o puede que si.
+
+Quiero que lo hagas en HTML/CSS/JS vanilla y que esten componentizados (webcomponents) sus partes más sensibles a reutilizar, para poder personalizarlo mas tarde y reutilizar al maximo. Estilo moderno, limpio y darkmode con accents indigo y deeppink.

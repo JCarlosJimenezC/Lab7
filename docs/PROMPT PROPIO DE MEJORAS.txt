@@ -1,0 +1,47 @@
+PROMPT PROPIO:
+
+Continúo trabajando sobre la plataforma de cursos con Web Components (HTML/CSS/JS vanilla, grid tipo "árbol de habilidades" estilo Street Fighter a la izquierda, contenido del tema a la derecha, darkmode con accents indigo y deeppink). Te voy a compartir el código actual y necesito que apliques las siguientes mejoras manteniendo la arquitectura de Web Components (nada de frameworks, nada de librerías externas innecesarias).
+Cambios solicitados:
+
+Agregar sección "Información del curso" (NUEVA):
+
+Crear un nuevo Web Component (ej. <course-info>) que muestre los metadatos del curso: nombre, descripción, fases incluidas, número total de temas, duración estimada, tecnologías cubiertas, etc.
+Esta sección debe ser el estado inicial por defecto del panel derecho cuando no hay ningún tema seleccionado (en lugar de mostrar un placeholder vacío o el primer tema).
+Agregar un botón/ícono visible en el menú lateral izquierdo (arriba o abajo del grid de habilidades) que, al hacer clic, regrese la vista derecha a esta sección de información del curso desde cualquier tema en el que esté el usuario. El botón debe ser claramente identificable (ícono de "home" o "info" + tooltip).
+Importante: el contenido de esta sección lo voy a llenar yo manualmente, así que estructura el componente para recibir los datos vía atributos/props o un objeto de configuración, no los hardcodees.
+
+
+Botón de modo claro / modo oscuro:
+
+Actualmente el sitio está en darkmode fijo. Agregar un toggle (sol/luna) en una zona visible y consistente (sugerencia: esquina superior derecha del header o al final del menú lateral).
+Implementar el theming usando variables CSS en :root y un atributo data-theme="light" / data-theme="dark" en <html> o <body> para alternar.
+Mantener los accents indigo y deeppink en ambos modos, pero ajustando los fondos, textos y bordes para que el modo claro se vea limpio y legible (no solo invertido).
+Persistir la preferencia del usuario en localStorage y respetar prefers-color-scheme del sistema en la primera visita.
+Asegurar que todos los Web Components (incluidos los que usan Shadow DOM) reciban correctamente las variables CSS del tema. Si estás usando Shadow DOM, expón las variables vía :host y heredando de las custom properties globales.
+
+
+Transiciones al aparecer el contenido del lado derecho:
+
+Cuando el usuario hace clic en un tema (cuadradito del grid), el contenido de la derecha actualmente cambia de forma abrupta. Agregar transiciones suaves:
+
+Fade-in + slide sutil desde abajo (~10-15px) con opacity y transform: translateY().
+Duración entre 250-350ms con cubic-bezier natural (ej. cubic-bezier(0.4, 0, 0.2, 1)).
+Aplicar la transición tanto al contenedor principal del tema como, escalonadamente (stagger), a sus hijos: título → video principal → highlights → capítulos. Un delay incremental de ~50-80ms entre cada bloque.
+
+
+La transición de salida (cuando se cambia de tema) debe ser un fade-out rápido antes de montar el nuevo contenido, para evitar saltos visuales.
+Respetar prefers-reduced-motion: reduce y desactivar/reducir animaciones cuando esté activo.
+
+
+Mejoras de clean code:
+
+Revisar y refactorizar el código aplicando buenas prácticas:
+
+Separación de responsabilidades: que cada Web Component tenga una responsabilidad clara y única; extraer lógica de datos a módulos JS aparte (ej. course-data.js, theme-manager.js).
+Nombres descriptivos para clases, métodos, variables y eventos personalizados (custom events) — nada de temp, data2, handleClick1.
+Eliminar código duplicado y extraer helpers reutilizables.
+Constantes para valores mágicos (duraciones de animación, breakpoints, claves de localStorage, etc.) en un archivo constants.js o al inicio del módulo.
+Comunicación entre componentes vía custom events (dispatchEvent con CustomEvent) en lugar de acoplamiento directo.
+Estructura clara dentro de cada Web Component: primero static get observedAttributes, luego constructor, connectedCallback, disconnectedCallback, attributeChangedCallback, después métodos privados (prefijo _ o # para campos privados reales).
+CSS organizado dentro de cada componente con secciones comentadas (layout, tipografía, estados, animaciones).
+Comentarios solo donde aporten valor (el "porqué", no el "qué").
